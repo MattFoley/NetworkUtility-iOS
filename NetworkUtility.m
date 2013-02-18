@@ -66,6 +66,11 @@ static NetworkUtility *_instance = nil;
     return [self.delegate postMultiPartFormData:url withParameters:params  authenticate:authenticate error:error];
 }
 
+- (NSString *)generateDigest:(NSString *)payload
+{
+    return @"digest_value"; //TODO: implement hashing
+}
+
 @end
 
 @implementation ResponseData

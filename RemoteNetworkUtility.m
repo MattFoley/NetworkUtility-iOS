@@ -31,7 +31,11 @@
 - (ResponseData *)get:(NSString *)url withParameters:(NSDictionary *)params authenticate:(BOOL)authenticate error:(NSError *)error
 {    
     if (params != nil) {
-        url = [NSString stringWithFormat:@"%@?%@", url, [RemoteNetworkUtility getStringForParameters:params]];
+        NSString *queryString = [RemoteNetworkUtility getStringForParameters:params];
+        if (self.digestParamName) {
+            queryString = [NSString stringWithFormat:@"%@&%@=%@", queryString, self.digestParamName, [self generateDigest:queryString]];
+        }
+        url = [NSString stringWithFormat:@"%@?%@", url, queryString];
     }
 #if DEBUG    
     NSLog(@"Making request: %@",url);
@@ -45,6 +49,13 @@
 
 - (ResponseData *)post:(NSString *)url withParameters:(NSDictionary *)params authenticate:(BOOL)authenticate error:(NSError *)error
 {
+    
+#if DEBUG
+    if (self.digestParamName)
+        NSLog(@"WARNING: digest not implemented for post:withParameters:authenticate:error");
+#endif
+    
+    
 #if DEBUG    
     NSLog(@"Making request: %@ params: %@",url,params);
 #endif    
@@ -59,6 +70,11 @@
 
 - (ResponseData *)put:(NSString *)url withParameters:(NSDictionary *)params authenticate:(BOOL)authenticate error:(NSError *)error
 {
+#if DEBUG
+    if (self.digestParamName)
+        NSLog(@"WARNING: digest not implemented for put:withParameters:authenticate:error");
+#endif
+    
 #if DEBUG    
     NSLog(@"Making request: %@ params: %@",url,params);
 #endif    
@@ -74,7 +90,12 @@
 
 - (ResponseData *)delete:(NSString *)url withParameters:(NSDictionary *)params authenticate:(BOOL)authenticate error:(NSError *)error
 {
-#if DEBUG    
+#if DEBUG
+    if (self.digestParamName)
+        NSLog(@"WARNING: digest not implemented for delete:withParameters:authenticate:error");
+#endif
+
+#if DEBUG
     NSLog(@"Making request: %@ params: %@",url,params);
 #endif    
     NSMutableURLRequest *request = [self createRequest:url];
@@ -208,6 +229,11 @@
     
     [body appendData:[[NSString stringWithFormat:@"--%@--\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
     
+#if DEBUG
+    if (self.digestParamName)
+        NSLog(@"WARNING: digest not implemented for post:withParameters:image:withName:authenticate:error");
+#endif
+    
     [request setHTTPBody:body];
     
     NSString *postLength = [NSString stringWithFormat:@"%d", [body length]];
@@ -238,6 +264,19 @@
     }
     
     [body appendData:[[NSString stringWithFormat:@"--%@--\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
+    
+    
+    if (self.digestParamName) {
+        NSString *bodyAsText = [[NSString alloc] initWithData:body encoding:NSUTF8StringEncoding];
+        NSString *digest = [self generateDigest:bodyAsText];
+
+        [body appendData:[[NSString stringWithFormat:@"--%@\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n", self.digestParamName] dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:[[NSString stringWithFormat:@"%@\r\n", digest] dataUsingEncoding:NSUTF8StringEncoding]];
+    }
+#if DEBUG
+    NSLog(@"Body: %@", body);
+#endif
     
     [request setHTTPBody:body];
     
@@ -405,6 +444,11 @@ int base64encode(unsigned s_len, char *src, unsigned d_len, char *dst)
     
     return 0;
     
+}
+
+- (NSString *)generateDigest:(NSString *)payload
+{
+    return @"";
 }
 
 @end

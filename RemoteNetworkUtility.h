@@ -27,6 +27,11 @@ typedef enum {
 @property (nonatomic, strong) NSURLConnection *connection;
 @property (nonatomic) RemoteNetworkUtilityAcceptsHeader header;
 
+@property(nonatomic,strong) NSString *digestParamName;
+@property(nonatomic,strong) NSString *digestSecretKey;
+
+- (NSString *)generateDigest:(NSString *)payload;
+
 - (id)initWithAcceptsHeader:(RemoteNetworkUtilityAcceptsHeader)header;
 
 - (NSMutableURLRequest *)createRequest:(NSString *)url;
